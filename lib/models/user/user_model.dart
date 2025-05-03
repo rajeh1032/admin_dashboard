@@ -7,9 +7,16 @@ class UserModel {
   final String id;
   final String name;
   final String email;
-  final String phone;
+  final String? photoURL;
+  final String address;
 
-  UserModel(this.id, this.name, this.email, this.phone);
+  UserModel(
+    this.id,
+    this.name,
+    this.email, {
+    this.photoURL,
+    required this.address,
+  });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
       _$UserModelFromJson(json);

@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/models/user/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/firebase_service.dart';
+import 'package:flutter/material.dart';
 
 class UsersScreen extends StatelessWidget {
-  final FirebaseService _firebaseService = FirebaseService();
+  final _firebaseService = FirebaseFirestoreService();
 
   UsersScreen({super.key});
 
@@ -24,8 +26,9 @@ class UsersScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream:
-                  _firebaseService.firestore.collection('users').snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection(AppCollections.users)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
@@ -34,29 +37,35 @@ class UsersScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                final users = snapshot.data?.docs ?? [];
-
+                if (snapshot.data == null ||
+                    snapshot.data?.docs.isEmpty == true) {
+                  return const Center(child: Text('No users found'));
+                }
+                List<UserModel> users = [];
+                for (var doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final user = UserModel.fromJson(data);
+                  users.add(user);
+                }
                 return ListView.builder(
                   itemCount: users.length,
                   itemBuilder: (context, index) {
-                    final user = users[index].data() as Map<String, dynamic>;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: user['photoURL'] != null
-                              ? NetworkImage(user['photoURL'])
+                          backgroundImage: users[index].photoURL != null
+                              ? NetworkImage(users[index].photoURL!)
                               : null,
-                          child: user['photoURL'] == null
+                          child: users[index].photoURL == null
                               ? const Icon(Icons.person)
                               : null,
                         ),
                         title: Text(
-                          user['displayName'] ?? 'No Name',
+                          users[index].name,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(user['email'] ?? 'No Email'),
+                        subtitle: Text(users[index].email),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

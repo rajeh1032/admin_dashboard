@@ -1,18 +1,20 @@
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_storage_service.dart';
+import 'package:admin_dashboard/core/utils/services/image_picker_service.dart';
+import 'package:admin_dashboard/models/category/category_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
-import '../services/firebase_service.dart';
+import 'package:universal_io/io.dart';
 
 class CategoryForm extends StatefulWidget {
-  final Map<String, dynamic>? initialData;
-  final String? categoryId;
+  final CategoryModel? categoryModel;
   final Function(bool)? onSubmitting;
   final VoidCallback? onSuccess;
 
   const CategoryForm({
     super.key,
-    this.initialData,
-    this.categoryId,
+    this.categoryModel,
     this.onSubmitting,
     this.onSuccess,
   });
@@ -25,28 +27,18 @@ class _CategoryFormState extends State<CategoryForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _firebaseService = FirebaseService();
-  Uint8List? _imageBytes;
-  final _imagePicker = ImagePicker();
+  final _firebaseService = FirebaseFirestoreService();
+  final _imagePicker = ImagePickerService();
+  final _firebaseStorage = FirebaseStorageService();
+  File? image;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialData != null) {
-      _nameController.text = widget.initialData!['name'];
-      _descriptionController.text = widget.initialData!['description'];
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile =
-        await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
-      setState(() {
-        _imageBytes = bytes;
-      });
+    if (widget.categoryModel != null) {
+      _nameController.text = widget.categoryModel?.name ?? '';
+      _descriptionController.text = widget.categoryModel?.description ?? '';
     }
   }
 
@@ -61,21 +53,25 @@ class _CategoryFormState extends State<CategoryForm> {
       }
 
       try {
-        if (widget.categoryId != null) {
-          await _firebaseService.updateCategory(
-            id: widget.categoryId!,
-            name: _nameController.text,
-            description: _descriptionController.text,
-            imageBytes: _imageBytes,
-          );
-        } else {
-          await _firebaseService.addCategory(
-            name: _nameController.text,
-            description: _descriptionController.text,
-            imageBytes: _imageBytes,
-          );
-        }
+        final String imageUrl = await _firebaseStorage.uploadFile(
+          file: image ?? File(''), // Use the selected image or an empty file
+        );
+        final categoryId = FirebaseFirestore.instance
+            .collection(AppCollections.categories)
+            .doc()
+            .id;
 
+        final CategoryModel categoryModel = CategoryModel(
+          _nameController.text,
+          _descriptionController.text,
+          imageUrl,
+          categoryId,
+          DateTime.now(),
+        );
+        await _firebaseService.addDocument(
+          collectionId: AppCollections.categories,
+          data: categoryModel.toJson(),
+        );
         if (mounted) {
           setState(() {
             _isSubmitting = false;
@@ -91,7 +87,7 @@ class _CategoryFormState extends State<CategoryForm> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  widget.categoryId != null
+                  widget.categoryModel != null
                       ? 'Category updated successfully'
                       : 'Category added successfully',
                 ),
@@ -156,17 +152,22 @@ class _CategoryFormState extends State<CategoryForm> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: _isSubmitting ? null : _pickImage,
+            onPressed: () {
+              if (_isSubmitting) return;
+              setState(() async {
+                image = await _imagePicker.pickImageFromGallery();
+              });
+            },
             child: const Text('Pick Image'),
           ),
-          if (_imageBytes != null)
-            Image.memory(
-              _imageBytes!,
+          if (image != null)
+            Image.file(
+              image!,
               height: 100,
             )
-          else if (widget.initialData?['imageUrl'] != null)
+          else if (widget.categoryModel?.imageUrl != null)
             Image.network(
-              widget.initialData!['imageUrl'],
+              widget.categoryModel!.imageUrl,
               height: 100,
             )
           else
@@ -183,7 +184,7 @@ class _CategoryFormState extends State<CategoryForm> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Text(widget.categoryId != null
+                : Text(widget.categoryModel != null
                     ? 'Update Category'
                     : 'Add Category'),
           ),

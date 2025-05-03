@@ -1,16 +1,52 @@
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/enums/order_types.dart';
+import 'package:admin_dashboard/models/order/order_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../widgets/confirm_dialog.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
 
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  List<OrderModel> orders = [];
+  final statusColor = [
+    Colors.orange,
+    Colors.blue,
+    Colors.green,
+    Colors.red,
+    Colors.grey,
+  ];
+  final List<Color?> statusBgColor = [
+    Colors.orange[50],
+    Colors.blue[50],
+    Colors.green[50],
+    Colors.red[50],
+    Colors.grey[50],
+  ];
+  Color getStatusColor(OrderStatus status) => switch (status) {
+        OrderStatus.pending => statusColor[0],
+        OrderStatus.processing => statusColor[1],
+        OrderStatus.completed => statusColor[2],
+        OrderStatus.cancelled => statusColor[3],
+        OrderStatus.viewed => statusColor[4],
+      };
+  Color? getStatusBgColor(OrderStatus status) => switch (status) {
+        OrderStatus.pending => statusBgColor[0],
+        OrderStatus.processing => statusBgColor[1],
+        OrderStatus.completed => statusBgColor[2],
+        OrderStatus.cancelled => statusBgColor[3],
+        OrderStatus.viewed => statusBgColor[4],
+      };
   Future<void> _handleOrderAction(
-      BuildContext context, String action, int orderId) async {
-    switch (action) {
-      case 'view':
-        // TODO: Navigate to order details screen
-        break;
-      case 'process':
+      BuildContext context, OrderStatus status) async {
+    switch (status) {
+      case OrderStatus.processing:
         final confirmed = await ConfirmDialog.show(
           context: context,
           title: 'Process Order',
@@ -20,13 +56,12 @@ class OrdersScreen extends StatelessWidget {
           icon: Icons.check_circle,
         );
         if (confirmed == true) {
-          // TODO: Implement order processing logic
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Order processed successfully')),
           );
         }
         break;
-      case 'cancel':
+      case OrderStatus.cancelled:
         final confirmed = await ConfirmDialog.show(
           context: context,
           title: 'Cancel Order',
@@ -36,11 +71,12 @@ class OrdersScreen extends StatelessWidget {
           icon: Icons.cancel,
         );
         if (confirmed == true) {
-          // TODO: Implement order cancellation logic
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Order cancelled successfully')),
           );
         }
+        break;
+      default:
         break;
     }
   }
@@ -74,7 +110,7 @@ class OrdersScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              PopupMenuButton<String>(
+              PopupMenuButton<OrderFilter>(
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -92,23 +128,23 @@ class OrdersScreen extends StatelessWidget {
                 ),
                 itemBuilder: (context) => [
                   const PopupMenuItem(
-                    value: 'all',
+                    value: OrderFilter.all,
                     child: Text('All Orders'),
                   ),
                   const PopupMenuItem(
-                    value: 'pending',
+                    value: OrderFilter.pending,
                     child: Text('Pending'),
                   ),
                   const PopupMenuItem(
-                    value: 'processing',
+                    value: OrderFilter.processing,
                     child: Text('Processing'),
                   ),
                   const PopupMenuItem(
-                    value: 'completed',
+                    value: OrderFilter.completed,
                     child: Text('Completed'),
                   ),
                   const PopupMenuItem(
-                    value: 'cancelled',
+                    value: OrderFilter.cancelled,
                     child: Text('Cancelled'),
                   ),
                 ],
@@ -118,125 +154,136 @@ class OrdersScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Expanded(
             child: Card(
-              child: ListView.builder(
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  final statusIndex = index % 4;
-                  final status = [
-                    'Pending',
-                    'Processing',
-                    'Completed',
-                    'Cancelled'
-                  ][statusIndex];
-                  final statusColor = [
-                    Colors.orange,
-                    Colors.blue,
-                    Colors.green,
-                    Colors.red
-                  ][statusIndex];
-                  final statusBgColor = [
-                    Colors.orange[50],
-                    Colors.blue[50],
-                    Colors.green[50],
-                    Colors.red[50]
-                  ][statusIndex];
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection(AppCollections.orders)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('Error loading orders'),
+                    );
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  if (snapshot.data == null ||
+                      snapshot.data?.docs.isEmpty == true) {
+                    return const Center(
+                      child: Text('No orders found'),
+                    );
+                  }
+                  final orders = snapshot.data!.docs
+                      .map((doc) => OrderModel.fromJson(doc.data()))
+                      .toList();
 
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
+                  return ListView.builder(
+                      itemCount: orders.length,
+                      itemBuilder: (context, index) {
+                        final order = orders[index];
+                        return Column(
                           children: [
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    'Order #${index.toString().padLeft(6, '0')}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Order #${(index + 1).toString().padLeft(6, '0')}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          order.customerName,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Customer: John Doe',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Total: \$${(index + 1) * 100}.00',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Items: ${index + 1}',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: getStatusBgColor(order.status),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        order.status.name,
+                                        style: TextStyle(
+                                          color: getStatusColor(order.status),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  PopupMenuButton<OrderStatus>(
+                                    icon: const Icon(Icons.more_vert),
+                                    onSelected: (value) => _handleOrderAction(
+                                      context,
+                                      order.status,
+                                    ),
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: OrderStatus.viewed,
+                                        child: Text('View Details'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: OrderStatus.processing,
+                                        child: Text('Process Order'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: OrderStatus.cancelled,
+                                        child: Text('Cancel Order'),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Total: \$${(index + 1) * 100}.00',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Items: ${index + 1}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusBgColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  status,
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert),
-                              onSelected: (value) =>
-                                  _handleOrderAction(context, value, index),
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'view',
-                                  child: Text('View Details'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'process',
-                                  child: Text('Process Order'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'cancel',
-                                  child: Text('Cancel Order'),
-                                ),
-                              ],
-                            ),
+                            if (index < 9) const Divider(),
                           ],
-                        ),
-                      ),
-                      if (index < 9) const Divider(),
-                    ],
-                  );
+                        );
+                      });
                 },
               ),
             ),

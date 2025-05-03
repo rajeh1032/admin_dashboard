@@ -10,10 +10,11 @@ class OrderModel {
   final double totalAmount;
   final int items;
   final String details;
+  final DateTime createdAt;
   final OrderStatus status;
 
   OrderModel(this.orderId, this.customerName, this.totalAmount, this.items,
-      this.details, this.status);
+      this.details, this.status, this.createdAt);
   factory OrderModel.fromJson(Map<String, dynamic> json) =>
       _$OrderModelFromJson(json);
   Map<String, dynamic> toJson() => _$OrderModelToJson(this);

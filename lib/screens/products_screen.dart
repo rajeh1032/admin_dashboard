@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
 import '../widgets/product_form.dart';
-import '../services/firebase_service.dart';
 
 class ProductsScreen extends StatelessWidget {
-  final FirebaseService _firebaseService = FirebaseService();
+  final _firebaseService = FirebaseFirestoreService();
 
   ProductsScreen({super.key});
 
@@ -51,7 +54,10 @@ class ProductsScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firebaseService.getProducts(),
+              stream: FirebaseFirestore.instance
+                  .collection(AppCollections.products)
+                  .orderBy('createdAt', descending: true)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
@@ -60,8 +66,16 @@ class ProductsScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                final products = snapshot.data?.docs ?? [];
+                if (snapshot.data == null ||
+                    snapshot.data?.docs.isEmpty == true) {
+                  return const Center(child: Text('No products found'));
+                }
+                final List<ProductModel> products = [];
+                for (var doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final product = ProductModel.fromJson(data);
+                  products.add(product);
+                }
 
                 return GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -72,8 +86,6 @@ class ProductsScreen extends StatelessWidget {
                   ),
                   itemCount: products.length,
                   itemBuilder: (context, index) {
-                    final product =
-                        products[index].data() as Map<String, dynamic>;
                     return Card(
                       elevation: 2,
                       child: InkWell(
@@ -83,18 +95,15 @@ class ProductsScreen extends StatelessWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (product['imageUrl'] != null)
-                                Image.network(
-                                  product['imageUrl'],
-                                  height: 60,
-                                  width: 60,
-                                  fit: BoxFit.cover,
-                                )
-                              else
-                                const Icon(Icons.shopping_bag, size: 60),
+                              Image.network(
+                                products[index].image,
+                                height: 60,
+                                width: 60,
+                                fit: BoxFit.cover,
+                              ),
                               const SizedBox(height: 16),
                               Text(
-                                product['name'],
+                                products[index].name,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -102,7 +111,7 @@ class ProductsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '\$${product['price'].toStringAsFixed(2)}',
+                                '\$${products[index].price.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.green,
@@ -111,7 +120,7 @@ class ProductsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                product['description'] ?? '',
+                                products[index].description,
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 14,
@@ -132,8 +141,7 @@ class ProductsScreen extends StatelessWidget {
                                         builder: (context) => AlertDialog(
                                           title: const Text('Edit Product'),
                                           content: ProductForm(
-                                            initialData: product,
-                                            productId: products[index].id,
+                                            productModel: products[index],
                                           ),
                                         ),
                                       );
@@ -159,8 +167,13 @@ class ProductsScreen extends StatelessWidget {
                                               onPressed: () async {
                                                 try {
                                                   await _firebaseService
-                                                      .deleteProduct(
-                                                          products[index].id);
+                                                      .deleteDocument(
+                                                          collectionId:
+                                                              AppCollections
+                                                                  .products,
+                                                          documentId:
+                                                              products[index]
+                                                                  .id);
                                                   if (context.mounted) {
                                                     Navigator.pop(context);
                                                     ScaffoldMessenger.of(

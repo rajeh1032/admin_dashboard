@@ -1,21 +1,23 @@
-import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/firebase_service.dart';
+import 'package:flutter/material.dart';
+
 import 'category_form.dart';
 
 class CategoryList extends StatelessWidget {
-  final FirebaseService _firebaseService = FirebaseService();
+  final FirebaseFirestoreService _firebaseService = FirebaseFirestoreService();
 
   CategoryList({super.key});
 
-  void _showEditDialog(BuildContext context, DocumentSnapshot category) {
+  void _showEditDialog(BuildContext context, CategoryModel category) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Category'),
         content: CategoryForm(
-          initialData: category.data() as Map<String, dynamic>,
-          categoryId: category.id,
+          categoryModel: category,
         ),
       ),
     );
@@ -35,7 +37,9 @@ class CategoryList extends StatelessWidget {
           TextButton(
             onPressed: () async {
               try {
-                await _firebaseService.deleteCategory(categoryId);
+                await _firebaseService.deleteDocument(
+                    collectionId: AppCollections.categories,
+                    documentId: categoryId);
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -61,8 +65,10 @@ class CategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final CollectionReference reference =
+        FirebaseFirestore.instance.collection(AppCollections.categories);
     return StreamBuilder<QuerySnapshot>(
-      stream: _firebaseService.getCategories(),
+      stream: reference.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -71,26 +77,28 @@ class CategoryList extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        final categories = snapshot.data!.docs;
+        List<CategoryModel> categories = [];
+        if (snapshot.hasData) {
+          categories = snapshot.data!.docs
+              .map((doc) =>
+                  CategoryModel.fromJson(doc.data() as Map<String, dynamic>))
+              .toList();
+        }
 
         return ListView.builder(
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
-            final data = category.data() as Map<String, dynamic>;
 
             return ListTile(
-              leading: data['imageUrl'] != null
-                  ? Image.network(
-                      data['imageUrl'],
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    )
-                  : const Icon(Icons.category),
-              title: Text(data['name']),
-              subtitle: Text(data['description']),
+              leading: Image.network(
+                category.imageUrl,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+              ),
+              title: Text(category.name),
+              subtitle: Text(category.description),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

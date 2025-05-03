@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
 import '../widgets/category_form.dart';
-import '../services/firebase_service.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -11,7 +14,7 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  final FirebaseService _firebaseService = FirebaseService();
+  final FirebaseFirestoreService _firebaseService = FirebaseFirestoreService();
   bool _isLoading = false;
 
   void _showAddDialog(BuildContext context) {
@@ -77,7 +80,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               const SizedBox(height: 24),
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: _firebaseService.getCategories(),
+                  stream: FirebaseFirestore.instance
+                      .collection(AppCollections.categories)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
@@ -86,8 +91,21 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
-
-                    final categories = snapshot.data?.docs ?? [];
+                    if (snapshot.data == null ||
+                        snapshot.data?.docs.isEmpty == true) {
+                      return const Center(
+                        child: Text(
+                          'No categories found. Add your first category!',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }
+                    List<CategoryModel> categories = [];
+                    for (var doc in snapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final category = CategoryModel.fromJson(data);
+                      categories.add(category);
+                    }
 
                     if (categories.isEmpty) {
                       return const Center(
@@ -108,8 +126,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       itemCount: categories.length,
                       itemBuilder: (context, index) {
-                        final category =
-                            categories[index].data() as Map<String, dynamic>;
                         return Card(
                           elevation: 2,
                           child: InkWell(
@@ -119,11 +135,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (category['imageUrl'] != null)
+                                  if (categories[index].imageUrl.isNotEmpty)
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
-                                        category['imageUrl'],
+                                        categories[index].imageUrl,
                                         height: 60,
                                         width: 60,
                                         fit: BoxFit.cover,
@@ -138,7 +154,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                     const Icon(Icons.category, size: 60),
                                   const SizedBox(height: 16),
                                   Text(
-                                    category['name'],
+                                    categories[index].name,
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -147,7 +163,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    category['description'] ?? '',
+                                    categories[index].description,
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 14,
@@ -173,9 +189,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                               content: SizedBox(
                                                 width: 400,
                                                 child: CategoryForm(
-                                                  initialData: category,
-                                                  categoryId:
-                                                      categories[index].id,
+                                                  categoryModel:
+                                                      categories[index],
                                                   onSubmitting: (isSubmitting) {
                                                     setState(() {
                                                       _isLoading = isSubmitting;
@@ -223,9 +238,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                                     });
                                                     try {
                                                       await _firebaseService
-                                                          .deleteCategory(
-                                                              categories[index]
-                                                                  .id);
+                                                          .deleteDocument(
+                                                              collectionId:
+                                                                  AppCollections
+                                                                      .categories,
+                                                              documentId:
+                                                                  categories[
+                                                                          index]
+                                                                      .id);
                                                       if (context.mounted) {
                                                         Navigator.pop(context);
                                                         setState(() {

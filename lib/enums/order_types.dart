@@ -2,5 +2,14 @@ enum OrderStatus {
   pending,
   completed,
   processing,
-  canceled,
+  cancelled,
+  viewed,
+}
+
+enum OrderFilter {
+  all,
+  pending,
+  processing,
+  completed,
+  cancelled,
 }

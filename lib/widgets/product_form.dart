@@ -1,18 +1,19 @@
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
+import 'package:admin_dashboard/core/utils/services/firebase_storage_service.dart';
+import 'package:admin_dashboard/core/utils/services/image_picker_service.dart';
+import 'package:admin_dashboard/models/category/category_model.dart';
+import 'package:admin_dashboard/models/product/product_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
-import '../services/firebase_service.dart';
+import 'package:universal_io/io.dart';
 
 class ProductForm extends StatefulWidget {
-  final Map<String, dynamic>? initialData;
-  final String? productId;
-
   const ProductForm({
     super.key,
-    this.initialData,
-    this.productId,
+    this.productModel,
   });
-
+  final ProductModel? productModel;
   @override
   State<ProductForm> createState() => _ProductFormState();
 }
@@ -22,63 +23,80 @@ class _ProductFormState extends State<ProductForm> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _firebaseService = FirebaseService();
-  Uint8List? _imageBytes;
-  final _imagePicker = ImagePicker();
+  final _firebaseService = FirebaseFirestoreService();
+  final _firebaseStorage = FirebaseStorageService();
+  File? image;
+  final _imagePicker = ImagePickerService();
   String? _selectedCategoryId;
-  List<Map<String, dynamic>> _categories = [];
+  List<CategoryModel> _categories = [];
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
-    if (widget.initialData != null) {
-      _nameController.text = widget.initialData!['name'];
-      _descriptionController.text = widget.initialData!['description'];
-      _priceController.text = widget.initialData!['price'].toString();
-      _selectedCategoryId = widget.initialData!['categoryId'];
-    }
+    // if (widget.initialData != null) {
+    //   _nameController.text = widget.;
+    //   _descriptionController.text = widget.initialData!['description'];
+    //   _priceController.text = widget.initialData!['price'].toString();
+    //   _selectedCategoryId = widget.initialData!['categoryId'];
+    // }
   }
 
   Future<void> _loadCategories() async {
-    _firebaseService.getCategories().listen((snapshot) {
-      setState(() {
-        _categories = snapshot.docs.map((doc) {
-          return {
-            'id': doc.id,
-            'name': doc['name'],
-          };
-        }).toList();
-      });
-    });
+    _firebaseService.listenToCollection(
+      onChange: (doc) {
+        setState(() {
+          _categories = doc
+              .map((e) =>
+                  CategoryModel.fromJson(e.data() as Map<String, dynamic>))
+              .toList();
+        });
+      },
+      collectionId: AppCollections.categories,
+      orderByField: 'createdAt',
+    );
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
-      setState(() {
-        _imageBytes = bytes;
-      });
-    }
+    final pickedFile = await _imagePicker.pickImageFromGallery();
+    setState(() {
+      image = pickedFile;
+    });
   }
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _selectedCategoryId != null) {
-      if (_imageBytes == null) {
+      if (image == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select an image')),
         );
         return;
       }
-      print('Submitting product: ${_nameController.text}');
-      await _firebaseService.addProduct(
+      String? imageUrl;
+      if (image != null) {
+        imageUrl = await _firebaseStorage.uploadFile(
+          file: image!,
+        );
+      }
+      final productID = FirebaseFirestore.instance
+          .collection(AppCollections.products)
+          .doc()
+          .id;
+      final ProductModel productModel = ProductModel(
         name: _nameController.text,
         description: _descriptionController.text,
-        price: double.parse(_priceController.text),
-        categoryId: _selectedCategoryId!,
-        imageBytes: _imageBytes!,
+        price: double.tryParse(_priceController.text) ?? 0.0,
+        id: productID,
+        createdAt: DateTime.now(),
+        image: imageUrl ?? "",
+        categoryID: _categories
+            .firstWhere((category) => category.id == _selectedCategoryId!)
+            .id,
+      );
+      await _firebaseService.addDocumentUsingId(
+        collectionId: AppCollections.products,
+        data: productModel.toJson(),
+        documentId: productID,
       );
       if (mounted) {
         Navigator.pop(context);
@@ -108,8 +126,8 @@ class _ProductFormState extends State<ProductForm> {
               decoration: const InputDecoration(labelText: 'Category'),
               items: _categories.map((category) {
                 return DropdownMenuItem<String>(
-                  value: category['id'] as String,
-                  child: Text(category['name'] as String),
+                  value: category.id,
+                  child: Text(category.name),
                 );
               }).toList(),
               onChanged: (value) {
@@ -167,14 +185,14 @@ class _ProductFormState extends State<ProductForm> {
               onPressed: _pickImage,
               child: const Text('Pick Image'),
             ),
-            if (_imageBytes != null)
-              Image.memory(
-                _imageBytes!,
+            if (image != null)
+              Image.file(
+                image!,
                 height: 100,
               )
-            else if (widget.initialData?['imageUrl'] != null)
+            else if (widget.productModel != null)
               Image.network(
-                widget.initialData!['imageUrl'],
+                widget.productModel!.image,
                 height: 100,
               )
             else
@@ -182,12 +200,12 @@ class _ProductFormState extends State<ProductForm> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _submitForm,
-              child: Text(
-                  widget.productId != null ? 'Update Product' : 'Add Product'),
+              child: Text(widget.productModel != null
+                  ? 'Update Product'
+                  : 'Add Product'),
             ),
             ElevatedButton(
               onPressed: () {
-                print('Button pressed!');
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Button works!')),
                 );

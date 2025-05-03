@@ -13,6 +13,7 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
       (json['items'] as num).toInt(),
       json['details'] as String,
       $enumDecode(_$OrderStatusEnumMap, json['status']),
+      DateTime.parse(json['createdAt'] as String),
     );
 
 Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
@@ -23,11 +24,12 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
       'items': instance.items,
       'details': instance.details,
       'status': _$OrderStatusEnumMap[instance.status]!,
+      'createdAt': instance.createdAt.toIso8601String(),
     };
 
 const _$OrderStatusEnumMap = {
   OrderStatus.pending: 'pending',
   OrderStatus.completed: 'completed',
   OrderStatus.processing: 'processing',
-  OrderStatus.canceled: 'canceled',
+  OrderStatus.cancelled: 'canceled',
 };
