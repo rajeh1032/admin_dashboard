@@ -1,51 +1,31 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
-import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
 import 'package:admin_dashboard/models/category/category_model.dart';
+import 'package:admin_dashboard/screens/categories/category_proiver.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../widgets/category_form.dart';
+import '../../widgets/category_form.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
-}
-
-class _CategoriesScreenState extends State<CategoriesScreen> {
-  final FirebaseFirestoreService _firebaseService = FirebaseFirestoreService();
-  bool _isLoading = false;
-
-  void _showAddDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Category'),
-        content: SizedBox(
-          width: 400,
-          child: CategoryForm(
-            onSubmitting: (isSubmitting) {
-              setState(() {
-                _isLoading = isSubmitting;
-              });
-            },
-            onSuccess: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Category added successfully!'),
-                backgroundColor: Colors.green,
-              ));
-            },
-          ),
-        ),
-      ),
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => CategoryProvider(),
+      child: const CategoriesDashboard(),
     );
   }
+}
+
+class CategoriesDashboard extends StatelessWidget {
+  const CategoriesDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CategoryProvider>(context);
+
     return Stack(
       children: [
         Container(
@@ -64,8 +44,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed:
-                        _isLoading ? null : () => _showAddDialog(context),
+                    onPressed: provider.isLoading
+                        ? null
+                        : () => provider.showAddDialog(context),
                     icon: const Icon(Icons.add),
                     label: const Text('Add Category'),
                     style: ElevatedButton.styleFrom(
@@ -192,9 +173,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                                   categoryModel:
                                                       categories[index],
                                                   onSubmitting: (isSubmitting) {
-                                                    setState(() {
-                                                      _isLoading = isSubmitting;
-                                                    });
+                                                    provider
+                                                        .setState(isSubmitting);
                                                   },
                                                   onSuccess: () {
                                                     Navigator.pop(context);
@@ -233,11 +213,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                                 ),
                                                 TextButton(
                                                   onPressed: () async {
-                                                    setState(() {
-                                                      _isLoading = true;
-                                                    });
+                                                    provider.setState(true);
                                                     try {
-                                                      await _firebaseService
+                                                      await provider
+                                                          .firebaseService
                                                           .deleteDocument(
                                                               collectionId:
                                                                   AppCollections
@@ -248,9 +227,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                                                       .id);
                                                       if (context.mounted) {
                                                         Navigator.pop(context);
-                                                        setState(() {
-                                                          _isLoading = false;
-                                                        });
+                                                        provider
+                                                            .setState(false);
                                                         ScaffoldMessenger.of(
                                                                 context)
                                                             .showSnackBar(
@@ -265,9 +243,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                                     } catch (e) {
                                                       if (context.mounted) {
                                                         Navigator.pop(context);
-                                                        setState(() {
-                                                          _isLoading = false;
-                                                        });
+                                                        provider
+                                                            .setState(false);
                                                         ScaffoldMessenger.of(
                                                                 context)
                                                             .showSnackBar(
@@ -303,7 +280,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ],
           ),
         ),
-        if (_isLoading)
+        if (provider.isLoading)
           const Positioned.fill(
             child: Center(
               child: CircularProgressIndicator(),

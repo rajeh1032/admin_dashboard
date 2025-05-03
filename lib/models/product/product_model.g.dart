@@ -12,7 +12,7 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
       description: json['description'] as String,
       price: (json['price'] as num).toDouble(),
       image: json['image'] as String,
-      categoryID: json['category'] as String,
+      categoryID: json['categoryID'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -23,6 +23,6 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'description': instance.description,
       'price': instance.price,
       'image': instance.image,
-      'category': instance.categoryID,
+      'categoryID': instance.categoryID,
       'createdAt': instance.createdAt.toIso8601String(),
     };

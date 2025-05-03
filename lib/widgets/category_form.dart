@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
 import 'package:admin_dashboard/core/utils/services/firebase_storage_service.dart';
@@ -5,7 +8,6 @@ import 'package:admin_dashboard/core/utils/services/image_picker_service.dart';
 import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:universal_io/io.dart';
 
 class CategoryForm extends StatefulWidget {
   final CategoryModel? categoryModel;
@@ -31,6 +33,7 @@ class _CategoryFormState extends State<CategoryForm> {
   final _imagePicker = ImagePickerService();
   final _firebaseStorage = FirebaseStorageService();
   File? image;
+  Uint8List? bytes;
   bool _isSubmitting = false;
 
   @override
@@ -152,17 +155,19 @@ class _CategoryFormState extends State<CategoryForm> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (_isSubmitting) return;
-              setState(() async {
-                image = await _imagePicker.pickImageFromGallery();
-              });
+              image = await _imagePicker.pickImageFromGallery();
+              if (image != null) {
+                bytes = await image!.readAsBytes();
+              }
+              setState(() {});
             },
             child: const Text('Pick Image'),
           ),
-          if (image != null)
-            Image.file(
-              image!,
+          if (bytes != null)
+            Image.memory(
+              bytes!,
               height: 100,
             )
           else if (widget.categoryModel?.imageUrl != null)

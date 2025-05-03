@@ -1,3 +1,4 @@
+import 'package:admin_dashboard/enums/user_role.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_model.g.dart';
@@ -9,6 +10,8 @@ class UserModel {
   final String email;
   final String? photoURL;
   final String address;
+  final UserRole role;
+  final UserStatus status;
 
   UserModel(
     this.id,
@@ -16,6 +19,8 @@ class UserModel {
     this.email, {
     this.photoURL,
     required this.address,
+    required this.role,
+    required this.status,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

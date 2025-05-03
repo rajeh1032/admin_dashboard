@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/sidebar.dart';
-import 'users_screen.dart';
-import 'categories_screen.dart';
+import 'users/users_screen.dart';
+import 'categories/categories_screen.dart';
 import 'products_screen.dart';
 import 'orders_screen.dart';
 
