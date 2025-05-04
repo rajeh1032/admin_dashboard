@@ -1,10 +1,9 @@
 import 'package:image_picker/image_picker.dart';
-import 'package:universal_io/io.dart';
 
 class ImagePickerService {
   final ImagePicker _picker = ImagePicker();
 
-  Future<File> pickImageFromGallery() async {
+  Future<XFile> pickImageFromGallery() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 800,
@@ -12,13 +11,13 @@ class ImagePickerService {
       imageQuality: 85,
     );
     if (pickedFile?.path != null) {
-      return File(pickedFile!.path);
+      return XFile(pickedFile!.path);
     } else {
       throw PickGalleryImageException();
     }
   }
 
-  Future<File> pickImageFromCamera() async {
+  Future<XFile> pickImageFromCamera() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 800,
@@ -27,20 +26,20 @@ class ImagePickerService {
     );
 
     if (pickedFile?.path != null) {
-      return File(pickedFile!.path);
+      return XFile(pickedFile!.path);
     } else {
       throw PickCameraImageException();
     }
   }
 
-  Future<List<File>> pickMultipleImages() async {
+  Future<List<XFile>> pickMultipleImages() async {
     final List<XFile> pickedFiles = await _picker.pickMultiImage(
       maxWidth: 800,
       maxHeight: 800,
       imageQuality: 85,
     );
     if (pickedFiles.isNotEmpty) {
-      return pickedFiles.map((xFile) => File(xFile.path)).toList();
+      return pickedFiles.map((xFile) => XFile(xFile.path)).toList();
     } else {
       throw PickMultiImageException();
     }

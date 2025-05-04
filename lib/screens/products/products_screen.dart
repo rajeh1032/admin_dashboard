@@ -1,30 +1,31 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
-import 'package:admin_dashboard/models/category/category_model.dart';
-import 'package:admin_dashboard/screens/categories/all_catecories.dart';
-import 'package:admin_dashboard/screens/categories/category_provier.dart';
+import 'package:admin_dashboard/enums/product_status.dart';
+import 'package:admin_dashboard/models/product/product_model.dart';
+import 'package:admin_dashboard/screens/products/all_products.dart';
+import 'package:admin_dashboard/screens/products/product_provider.dart';
 import 'package:admin_dashboard/widgets/add_item.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CategoriesScreen extends StatelessWidget {
-  const CategoriesScreen({super.key});
+class ProductsScreen extends StatelessWidget {
+  const ProductsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => CategoryProvider(),
-      child: const CategoriesDashboard(),
+      create: (_) => ProductProvider()..getCategories(),
+      child: const ProdcutsDashboard(),
     );
   }
 }
 
-class CategoriesDashboard extends StatelessWidget {
-  const CategoriesDashboard({super.key});
+class ProdcutsDashboard extends StatelessWidget {
+  const ProdcutsDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<CategoryProvider>();
+    final provider = context.read<ProductProvider>();
     return Stack(
       children: [
         Container(
@@ -36,18 +37,18 @@ class CategoriesDashboard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Categories',
+                    'Products',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   AddItemButton(
-                    onPressed: () async => await provider.showCategoryDialog(
+                    onPressed: () async => await provider.showProductDialog(
                       context: context,
                       isAdding: true,
                     ),
-                    label: 'Add Category',
+                    label: 'Add Product',
                   ),
                 ],
               ),
@@ -57,17 +58,17 @@ class CategoriesDashboard extends StatelessWidget {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search Categories...',
+                        hintText: 'Search Products...',
                         prefixIcon: const Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onChanged: (value) => provider.searchCategory(value),
+                      onChanged: (value) => provider.searchProducts(value),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  PopupMenuButton<String>(
+                  PopupMenuButton<ProductFilter>(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
@@ -83,41 +84,43 @@ class CategoriesDashboard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    onSelected: (value) => provider.searchCategory(value),
+                    onSelected: (value) => provider.searchProducts(value.name),
                     itemBuilder: (context) => [
                       const PopupMenuItem(
-                        value: 'All',
-                        child: Text('All Categories'),
+                        value: ProductFilter.all,
+                        child: Text('All Products'),
                       ),
-                      ...provider.categories.map((category) {
-                        return PopupMenuItem(
-                          value: category.name,
-                          child: Text(category.name),
-                        );
-                      }),
+                      const PopupMenuItem(
+                        value: ProductFilter.inStock,
+                        child: Text('in Stock'),
+                      ),
+                      const PopupMenuItem(
+                        value: ProductFilter.outOfStock,
+                        child: Text('Out of Stock'),
+                      ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              if (provider.filteredCategories.isNotEmpty)
+              if (provider.filteredProducts.isNotEmpty)
                 Expanded(
-                  child: CatecoryList(
-                    categories: provider.filteredCategories,
+                  child: ProductsList(
+                    prodcuts: provider.filteredProducts,
                   ),
                 )
-              else if (provider.filteredCategories.isEmpty &&
-                  provider.categories.isNotEmpty)
+              else if (provider.filteredProducts.isEmpty &&
+                  provider.products.isNotEmpty)
                 const Expanded(
-                  child: CatecoryList(
-                    categories: [],
+                  child: ProductsList(
+                    prodcuts: [],
                   ),
                 )
               else
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
-                        .collection(AppCollections.categories)
+                        .collection(AppCollections.products)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -126,25 +129,16 @@ class CategoriesDashboard extends StatelessWidget {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
-                      if (snapshot.data == null ||
-                          snapshot.data?.docs.isEmpty == true) {
-                        return const Center(
-                          child: Text(
-                            'No categories found. Add your first category!',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }
 
-                      List<CategoryModel> categories = [];
+                      List<ProductModel> products = [];
                       for (var doc in snapshot.data!.docs) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final category = CategoryModel.fromJson(data);
-                        categories.add(category);
+                        final product = ProductModel.fromJson(data);
+                        products.add(product);
                       }
-                      provider.categories = categories;
-                      return CatecoryList(
-                        categories: categories,
+                      provider.products = products;
+                      return ProductsList(
+                        prodcuts: products,
                       );
                     },
                   ),

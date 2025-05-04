@@ -11,9 +11,11 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
       name: json['name'] as String,
       description: json['description'] as String,
       price: (json['price'] as num).toDouble(),
-      image: json['image'] as String,
+      quantity: (json['quantity'] as num).toInt(),
+      imageUrl: json['imageUrl'] as String,
       categoryID: json['categoryID'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      status: $enumDecode(_$ProductStatusEnumMap, json['status']),
     );
 
 Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
@@ -22,7 +24,14 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'name': instance.name,
       'description': instance.description,
       'price': instance.price,
-      'image': instance.image,
+      'quantity': instance.quantity,
+      'imageUrl': instance.imageUrl,
       'categoryID': instance.categoryID,
       'createdAt': instance.createdAt.toIso8601String(),
+      'status': _$ProductStatusEnumMap[instance.status]!,
     };
+
+const _$ProductStatusEnumMap = {
+  ProductStatus.outOfStock: 'outOfStock',
+  ProductStatus.inStock: 'inStock',
+};

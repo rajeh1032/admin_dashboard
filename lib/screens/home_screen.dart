@@ -3,14 +3,13 @@ import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/models/user/user_model.dart';
+import 'package:admin_dashboard/screens/products/products_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/sidebar.dart';
 import '../widgets/stat_card.dart';
 import 'categories/categories_screen.dart';
-import 'orders_screen.dart';
-import 'products_screen.dart';
 import 'users/users_screen.dart';
 
 class Home extends StatefulWidget {
@@ -26,10 +25,10 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _screens = [
     _DashboardContent(),
-    UsersScreen(),
+    const UsersScreen(),
     const CategoriesScreen(),
-    ProductsScreen(),
-    const OrdersScreen(),
+    const ProductsScreen(),
+    // const OrdersScreen(),
   ];
 
   @override
