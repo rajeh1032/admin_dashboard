@@ -115,6 +115,11 @@ class _OrderFormState extends State<OrderForm> {
             controller: provider.customerNameController,
           ),
           CustomTextField(
+            labelText: "Customer Phone",
+            hintText: "Enter Customer Phone",
+            controller: provider.customerPhoneController,
+          ),
+          CustomTextField(
             labelText: "Quantity",
             hintText: "Enter Quantity",
             controller: provider.quantityController,

@@ -14,6 +14,7 @@ class OrderModel {
   final String categoryId;
   final DateTime createdAt;
   final OrderStatus status;
+  final String phoneNumber;
 
   OrderModel(
       this.orderId,
@@ -24,7 +25,8 @@ class OrderModel {
       this.status,
       this.createdAt,
       this.productId,
-      this.categoryId);
+      this.categoryId,
+      this.phoneNumber);
   factory OrderModel.fromJson(Map<String, dynamic> json) =>
       _$OrderModelFromJson(json);
   Map<String, dynamic> toJson() => _$OrderModelToJson(this);

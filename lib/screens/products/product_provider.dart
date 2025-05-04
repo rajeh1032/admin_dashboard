@@ -29,7 +29,7 @@ class ProductProvider with ChangeNotifier {
   List<ProductModel> filteredProducts = [];
   List<ProductModel> products = [];
   void searchProducts(String query) {
-    if (query == "All") {
+    if (query == "all") {
       filteredProducts = products;
       notifyListeners();
       return;
@@ -37,6 +37,7 @@ class ProductProvider with ChangeNotifier {
     if (query.isNotEmpty) {
       filteredProducts = products
           .where((element) =>
+              element.status.name.toLowerCase().contains(query.toLowerCase()) ||
               element.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
     } else {

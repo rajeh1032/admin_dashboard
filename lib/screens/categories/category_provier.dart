@@ -31,6 +31,9 @@ class CategoryProvider with ChangeNotifier {
     if (query.isNotEmpty) {
       filteredCategories = categories
           .where((category) =>
+              category.description
+                  .toLowerCase()
+                  .contains(query.toLowerCase()) ||
               category.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
     } else {

@@ -14,6 +14,7 @@ class OrderProvider extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
   final TextEditingController orderDetailsController = TextEditingController();
   final TextEditingController customerNameController = TextEditingController();
+  final TextEditingController customerPhoneController = TextEditingController();
   final TextEditingController productIdController = TextEditingController();
   final TextEditingController categoryIdController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
@@ -34,7 +35,9 @@ class OrderProvider extends ChangeNotifier {
 
   void clearFields() {
     customerNameController.clear();
+    customerPhoneController.clear();
     productIdController.clear();
+    categoryIdController.clear();
     quantityController.clear();
     statusController.clear();
     priceController.clear();
@@ -94,6 +97,7 @@ class OrderProvider extends ChangeNotifier {
       DateTime.now(),
       productIdController.text,
       categoryIdController.text,
+      customerPhoneController.text,
     );
     if (formKey.currentState!.validate()) {
       try {
@@ -218,6 +222,7 @@ class OrderProvider extends ChangeNotifier {
     priceController.text = order.price.toString();
     categoryIdController.text = order.categoryId;
     productIdController.text = order.productId;
+    customerPhoneController.text = order.phoneNumber;
     productController.text =
         allProducts.firstWhere((product) => product.id == order.productId).name;
     categoryController.text = categories
@@ -240,6 +245,7 @@ class OrderProvider extends ChangeNotifier {
         oldOrder.createdAt,
         productIdController.text,
         categoryIdController.text,
+        customerPhoneController.text,
       );
       try {
         await _firebaseService.updateDocument(

@@ -13,6 +13,7 @@ class OrdersList extends StatelessWidget {
     Colors.green,
     Colors.red,
     Colors.grey,
+    Colors.purple,
   ];
   final List<Color?> statusBgColor = [
     Colors.orange[50],
@@ -20,6 +21,7 @@ class OrdersList extends StatelessWidget {
     Colors.green[50],
     Colors.red[50],
     Colors.grey[50],
+    Colors.purple[50],
   ];
   Color getStatusColor(OrderStatus status) => switch (status) {
         OrderStatus.pending => statusColor[0],
@@ -27,6 +29,7 @@ class OrdersList extends StatelessWidget {
         OrderStatus.completed => statusColor[2],
         OrderStatus.cancelled => statusColor[3],
         OrderStatus.viewed => statusColor[4],
+        OrderStatus.fromUser => statusColor[5],
       };
   Color? getStatusBgColor(OrderStatus status) => switch (status) {
         OrderStatus.pending => statusBgColor[0],
@@ -34,6 +37,7 @@ class OrdersList extends StatelessWidget {
         OrderStatus.completed => statusBgColor[2],
         OrderStatus.cancelled => statusBgColor[3],
         OrderStatus.viewed => statusBgColor[4],
+        OrderStatus.fromUser => statusBgColor[5],
       };
   @override
   Widget build(BuildContext context) {

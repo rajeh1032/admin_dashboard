@@ -24,7 +24,7 @@ class CategoriesDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<CategoryProvider>();
+    final provider = context.watch<CategoryProvider>();
     return Stack(
       children: [
         Container(

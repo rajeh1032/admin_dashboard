@@ -155,6 +155,14 @@ class _OrdersDashbordState extends State<OrdersDashboard> {
                     value: OrderFilter.cancelled,
                     child: Text('Cancelled'),
                   ),
+                  const PopupMenuItem(
+                    value: OrderFilter.viewed,
+                    child: Text('Viewed'),
+                  ),
+                  const PopupMenuItem(
+                    value: OrderFilter.fromUser,
+                    child: Text('From User'),
+                  ),
                 ],
               ),
             ],

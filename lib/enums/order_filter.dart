@@ -4,4 +4,6 @@ enum OrderFilter {
   processing,
   completed,
   cancelled,
+  viewed,
+  fromUser,
 }

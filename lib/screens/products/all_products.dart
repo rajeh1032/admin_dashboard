@@ -10,7 +10,7 @@ class ProductsList extends StatelessWidget {
   final List<ProductModel> prodcuts;
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ProductProvider>(context);
+    final provider = context.read<ProductProvider>();
     if (prodcuts.isEmpty) {
       return const Center(
         child: Text(

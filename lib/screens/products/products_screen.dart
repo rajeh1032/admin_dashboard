@@ -25,7 +25,7 @@ class ProdcutsDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<ProductProvider>();
+    final provider = context.watch<ProductProvider>();
     return Stack(
       children: [
         Container(

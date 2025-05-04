@@ -10,7 +10,7 @@ class CatecoryList extends StatelessWidget {
   final List<CategoryModel> categories;
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CategoryProvider>(context);
+    final provider = context.watch<CategoryProvider>();
     if (categories.isEmpty) {
       return const Center(
         child: Text(

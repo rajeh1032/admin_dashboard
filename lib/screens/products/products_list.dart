@@ -10,10 +10,10 @@ class CategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CollectionReference reference =
-        FirebaseFirestore.instance.collection(AppCollections.categories);
     return StreamBuilder<QuerySnapshot>(
-      stream: reference.snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection(AppCollections.categories)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
