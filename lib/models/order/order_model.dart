@@ -7,14 +7,24 @@ part 'order_model.g.dart';
 class OrderModel {
   final String orderId;
   final String customerName;
-  final double totalAmount;
-  final int items;
+  final double price;
+  final int quantity;
   final String details;
+  final String productId;
+  final String categoryId;
   final DateTime createdAt;
   final OrderStatus status;
 
-  OrderModel(this.orderId, this.customerName, this.totalAmount, this.items,
-      this.details, this.status, this.createdAt);
+  OrderModel(
+      this.orderId,
+      this.customerName,
+      this.price,
+      this.quantity,
+      this.details,
+      this.status,
+      this.createdAt,
+      this.productId,
+      this.categoryId);
   factory OrderModel.fromJson(Map<String, dynamic> json) =>
       _$OrderModelFromJson(json);
   Map<String, dynamic> toJson() => _$OrderModelToJson(this);

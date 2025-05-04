@@ -3,6 +3,7 @@ import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/models/user/user_model.dart';
+import 'package:admin_dashboard/screens/orders/orders_screen.dart';
 import 'package:admin_dashboard/screens/products/products_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ class _HomeState extends State<Home> {
     const UsersScreen(),
     const CategoriesScreen(),
     const ProductsScreen(),
-    // const OrdersScreen(),
+    const OrdersScreen(),
   ];
 
   @override
