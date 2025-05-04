@@ -1,10 +1,17 @@
+import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/models/category/category_model.dart';
+import 'package:admin_dashboard/models/order/order_model.dart';
+import 'package:admin_dashboard/models/product/product_model.dart';
+import 'package:admin_dashboard/models/user/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../widgets/stat_card.dart';
+
 import '../widgets/sidebar.dart';
-import 'users/users_screen.dart';
+import '../widgets/stat_card.dart';
 import 'categories/categories_screen.dart';
-import 'products_screen.dart';
 import 'orders_screen.dart';
+import 'products_screen.dart';
+import 'users/users_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -29,7 +36,6 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1024;
-
     return Scaffold(
       appBar: isDesktop
           ? null
@@ -80,7 +86,59 @@ class _HomeState extends State<Home> {
   }
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends StatefulWidget {
+  @override
+  State<_DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<_DashboardContent> {
+  List<UserModel> users = [];
+  List<ProductModel> products = [];
+  List<CategoryModel> categories = [];
+  List<OrderModel> orders = [];
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    FirebaseFirestore.instance
+        .collection(AppCollections.users)
+        .snapshots()
+        .listen((data) {
+      users.clear();
+      users = data.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
+      setState(() {});
+    });
+    FirebaseFirestore.instance
+        .collection(AppCollections.products)
+        .snapshots()
+        .listen((data) {
+      products.clear();
+      products =
+          data.docs.map((doc) => ProductModel.fromJson(doc.data())).toList();
+      setState(() {});
+    });
+    FirebaseFirestore.instance
+        .collection(AppCollections.categories)
+        .snapshots()
+        .listen((data) {
+      categories.clear();
+      categories =
+          data.docs.map((doc) => CategoryModel.fromJson(doc.data())).toList();
+      setState(() {});
+    });
+    FirebaseFirestore.instance
+        .collection(AppCollections.orders)
+        .snapshots()
+        .listen((data) {
+      orders.clear();
+      orders = data.docs.map((doc) => OrderModel.fromJson(doc.data())).toList();
+      setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -102,7 +160,6 @@ class _DashboardContent extends StatelessWidget {
               builder: (context, constraints) {
                 int crossAxisCount;
                 double childAspectRatio;
-
                 if (constraints.maxWidth > 1200) {
                   crossAxisCount = 4;
                   childAspectRatio = 2;
@@ -113,35 +170,34 @@ class _DashboardContent extends StatelessWidget {
                   crossAxisCount = 1;
                   childAspectRatio = 2.5;
                 }
-
                 return GridView.count(
                   crossAxisCount: crossAxisCount,
                   shrinkWrap: true,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
                   childAspectRatio: childAspectRatio,
-                  children: const [
+                  children: [
                     StatCard(
                       title: 'Users',
-                      value: '22',
+                      value: users.length.toString(),
                       icon: Icons.people,
                       color: Colors.orange,
                     ),
                     StatCard(
                       title: 'Categories',
-                      value: '5',
+                      value: categories.length.toString(),
                       icon: Icons.category,
                       color: Colors.green,
                     ),
                     StatCard(
                       title: 'Products',
-                      value: '10',
+                      value: products.length.toString(),
                       icon: Icons.inventory,
                       color: Colors.blue,
                     ),
                     StatCard(
                       title: 'Orders',
-                      value: '0',
+                      value: orders.length.toString(),
                       icon: Icons.shopping_cart,
                       color: Colors.purple,
                     ),

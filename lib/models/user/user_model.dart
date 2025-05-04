@@ -11,7 +11,7 @@ class UserModel {
   final String? photoURL;
   final String address;
   final UserRole role;
-  final UserStatus status;
+  UserStatus status;
 
   UserModel(
     this.id,

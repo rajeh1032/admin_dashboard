@@ -9,9 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class UsersScreen extends StatelessWidget {
-  final _firebaseService = FirebaseFirestoreService();
-
-  UsersScreen({super.key});
+  const UsersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -130,48 +128,34 @@ class UsersScreen extends StatelessWidget {
                                 onPressed: () {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Delete User'),
-                                      content: const Text(
-                                          'Are you sure you want to delete this user?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('Cancel'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () async {
-                                            try {
-                                              await _firebaseService
-                                                  .deleteDocument(
-                                                collectionId: 'users',
-                                                documentId: users[index].id,
+                                    builder: (_) =>
+                                        ChangeNotifierProvider.value(
+                                      value: Provider.of<UsersProvider>(
+                                        context,
+                                      ),
+                                      child: AlertDialog(
+                                        title: const Text('Delete User'),
+                                        content: const Text(
+                                            'Are you sure you want to delete this user?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              final provider =
+                                                  context.read<UsersProvider>();
+                                              await provider.deleteUser(
+                                                context: context,
+                                                user: users[index],
                                               );
-                                              if (context.mounted) {
-                                                Navigator.pop(context);
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                      content: Text(
-                                                          'User deleted successfully')),
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (context.mounted) {
-                                                Navigator.pop(context);
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                      content:
-                                                          Text('Error: $e')),
-                                                );
-                                              }
-                                            }
-                                          },
-                                          child: const Text('Delete'),
-                                        ),
-                                      ],
+                                            },
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   );
                                 },
@@ -199,7 +183,7 @@ class UserDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<UsersProvider>(context);
     return AlertDialog(
-      title: const Text(' User Form'),
+      title: const Text('User Form'),
       content: Form(
         key: provider.formkey,
         child: Column(
@@ -376,25 +360,27 @@ class UsersProvider extends ChangeNotifier {
   List<UserModel> get users => _users;
   Future<void> addUser(BuildContext context) async {
     if (formkey.currentState!.validate()) {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: defaultPassword,
-      );
-      credential.user?.updateDisplayName(nameController.text);
-      credential.user?.sendEmailVerification();
-      final id =
-          FirebaseFirestore.instance.collection(AppCollections.users).doc().id;
-      final user = UserModel(
-        id,
-        nameController.text,
-        emailController.text,
-        address: addressController.text,
-        role: _userRole,
-        status: _userStatus,
-      );
       try {
-        _firebaseService.addDocumentUsingId(
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: defaultPassword,
+        );
+        credential.user?.updateDisplayName(nameController.text);
+        credential.user?.sendEmailVerification();
+        final id = FirebaseFirestore.instance
+            .collection(AppCollections.users)
+            .doc()
+            .id;
+        final user = UserModel(
+          id,
+          nameController.text,
+          emailController.text,
+          address: addressController.text,
+          role: _userRole,
+          status: _userStatus,
+        );
+        await _firebaseService.addDocumentUsingId(
           collectionId: AppCollections.users,
           documentId: id,
           data: user.toJson(),
@@ -437,6 +423,35 @@ class UsersProvider extends ChangeNotifier {
           SnackBar(content: Text('Error: $e')),
         );
       }
+    }
+  }
+
+  Future<void> deleteUser(
+      {required BuildContext context, required UserModel user}) async {
+    try {
+      user.status = UserStatus.blocked;
+      await _firebaseService.updateDocument(
+        collectionId: AppCollections.users,
+        documentId: user.id,
+        data: user.toJson(),
+      );
+      // await _firebaseService.deleteDocument(
+      //   collectionId: AppCollections.users,
+      //   documentId: user.id,
+      // );
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User deleted successfully'),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+        ),
+      );
     }
   }
 }
