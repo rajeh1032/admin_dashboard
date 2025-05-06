@@ -37,6 +37,17 @@ class UsersProvider extends ChangeNotifier {
     addressController.text = user.address;
     _userRole = user.role;
     _userStatus = user.status;
+    phoneNumberController.text = user.phoneNumber;
+    notifyListeners();
+  }
+
+  void resetForm() {
+    nameController.clear();
+    emailController.clear();
+    addressController.clear();
+    phoneNumberController.clear();
+    _userRole = UserRole.user;
+    _userStatus = UserStatus.active;
     notifyListeners();
   }
 
@@ -69,6 +80,7 @@ class UsersProvider extends ChangeNotifier {
           documentId: id,
           data: user.toJson(),
         );
+        resetForm();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User added successfully')),
@@ -99,6 +111,7 @@ class UsersProvider extends ChangeNotifier {
           documentId: oldUser.id,
           data: user.toJson(),
         );
+        resetForm();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User Updated Successfully')),

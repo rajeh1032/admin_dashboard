@@ -1,9 +1,8 @@
 import 'package:admin_dashboard/firebase_options.dart';
+import 'package:admin_dashboard/screens/login/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-
-import 'screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,6 +80,6 @@ class _AppInitializerState extends State<AppInitializer> {
       );
     }
 
-    return const Home();
+    return const LoginScreen();
   }
 }

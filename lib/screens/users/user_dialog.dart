@@ -13,7 +13,19 @@ class UserDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<UsersProvider>(context);
     return AlertDialog(
-      title: const Text('User Form'),
+      title: Row(
+        children: [
+          const Text('User Form'),
+          const Spacer(),
+          IconButton(
+            onPressed: () {
+              provider.resetForm();
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.close),
+          )
+        ],
+      ),
       content: Form(
         key: provider.formkey,
         child: Column(
