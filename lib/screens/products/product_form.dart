@@ -42,7 +42,9 @@ class _ProductFormState extends State<ProductForm> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: PopupMenuButton<String>(
-                  borderRadius: BorderRadius.circular(8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   icon: Row(
                     children: [
                       Text(
