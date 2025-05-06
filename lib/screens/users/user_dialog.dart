@@ -31,6 +31,12 @@ class UserDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             CustomTextField(
+              controller: provider.phoneNumberController,
+              labelText: 'Phone Number',
+              hintText: 'Enter user Phone Number',
+            ),
+            const SizedBox(height: 8),
+            CustomTextField(
               controller: provider.addressController,
               labelText: 'address',
               hintText: 'Enter user address',

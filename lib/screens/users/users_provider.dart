@@ -15,6 +15,7 @@ class UsersProvider extends ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
   final List<UserModel> _users = [];
   UserRole _userRole = UserRole.user;
   UserStatus _userStatus = UserStatus.active;
@@ -59,6 +60,7 @@ class UsersProvider extends ChangeNotifier {
           nameController.text,
           emailController.text,
           address: addressController.text,
+          phoneNumber: phoneNumberController.text,
           role: _userRole,
           status: _userStatus,
         );
@@ -87,6 +89,7 @@ class UsersProvider extends ChangeNotifier {
         nameController.text,
         emailController.text,
         address: addressController.text,
+        phoneNumber: oldUser.phoneNumber,
         role: _userRole,
         status: _userStatus,
       );

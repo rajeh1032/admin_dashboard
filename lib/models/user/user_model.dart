@@ -11,6 +11,7 @@ class UserModel {
   final String email;
   final String? photoURL;
   final String address;
+  final String phoneNumber;
   final UserRole role;
   UserStatus status;
 
@@ -19,6 +20,7 @@ class UserModel {
     this.name,
     this.email, {
     this.photoURL,
+    required this.phoneNumber,
     required this.address,
     required this.role,
     required this.status,
