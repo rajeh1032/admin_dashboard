@@ -4,7 +4,4 @@ enum OrderStatus {
   processing,
   cancelled,
   viewed,
-  fromUser,
 }
-
-

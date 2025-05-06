@@ -158,10 +158,6 @@ class _OrdersDashbordState extends State<OrdersDashboard> {
                     value: OrderFilter.viewed,
                     child: Text('Viewed'),
                   ),
-                  const PopupMenuItem(
-                    value: OrderFilter.fromUser,
-                    child: Text('From User'),
-                  ),
                 ],
               ),
             ],

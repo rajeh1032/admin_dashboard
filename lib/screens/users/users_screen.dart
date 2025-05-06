@@ -1,5 +1,6 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/enums/user_role.dart';
+import 'package:admin_dashboard/enums/user_status.dart';
 import 'package:admin_dashboard/models/user/user_model.dart';
 import 'package:admin_dashboard/screens/users/user_dialog.dart';
 import 'package:admin_dashboard/screens/users/users_provider.dart';

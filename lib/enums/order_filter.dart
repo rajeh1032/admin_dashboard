@@ -5,5 +5,4 @@ enum OrderFilter {
   completed,
   cancelled,
   viewed,
-  fromUser,
 }

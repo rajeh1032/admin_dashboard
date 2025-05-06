@@ -1,4 +1,4 @@
-import 'package:admin_dashboard/enums/product_status.dart';
+import 'package:admin_dashboard/enums/product_filter.dart';
 import 'package:admin_dashboard/screens/products/all_products.dart';
 import 'package:admin_dashboard/screens/products/product_provider.dart';
 import 'package:admin_dashboard/widgets/add_item.dart';
@@ -96,6 +96,10 @@ class ProdcutsDashboard extends StatelessWidget {
                       const PopupMenuItem(
                         value: ProductFilter.outOfStock,
                         child: Text('Out of Stock'),
+                      ),
+                      const PopupMenuItem(
+                        value: ProductFilter.fromUser,
+                        child: Text('From User'),
                       ),
                     ],
                   ),

@@ -3,8 +3,4 @@ enum UserRole {
   user,
 }
 
-enum UserStatus {
-  active,
-  inactive,
-  blocked,
-}
+
