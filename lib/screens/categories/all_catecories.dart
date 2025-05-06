@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CatecoryList extends StatelessWidget {
-  const CatecoryList({super.key, required this.categories});
-  final List<CategoryModel> categories;
+  const CatecoryList({super.key, required this.categoriess});
+  final List<CategoryModel> categoriess;
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CategoryProvider>();
-    if (categories.isEmpty) {
+    if (provider.filteredCategories.isEmpty) {
       return const Center(
         child: Text(
           'No categories found. Add your first category!',
@@ -19,6 +19,7 @@ class CatecoryList extends StatelessWidget {
         ),
       );
     }
+    final categories = provider.filteredCategories;
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,

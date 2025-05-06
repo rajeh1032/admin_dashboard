@@ -1,9 +1,6 @@
-import 'package:admin_dashboard/core/constants/app_collections.dart';
-import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/screens/categories/all_catecories.dart';
 import 'package:admin_dashboard/screens/categories/category_provier.dart';
 import 'package:admin_dashboard/widgets/add_item.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +10,7 @@ class CategoriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => CategoryProvider(),
+      create: (_) => CategoryProvider()..fetchCategories(),
       child: const CategoriesDashboard(),
     );
   }
@@ -100,64 +97,31 @@ class CategoriesDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              if (provider.filteredCategories.isNotEmpty)
-                Expanded(
-                  child: CatecoryList(
-                    categories: provider.filteredCategories,
+              if (provider.isLoading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
                   ),
                 )
               else if (provider.filteredCategories.isEmpty &&
-                  provider.categories.isNotEmpty)
+                  provider.categories.isEmpty)
                 const Expanded(
-                  child: CatecoryList(
-                    categories: [],
+                  child: Center(
+                    child: Text(
+                      'No categories found. Add your first category!',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 )
-              else
+              else if (provider.filteredCategories.isNotEmpty)
                 Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection(AppCollections.categories)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.data == null ||
-                          snapshot.data?.docs.isEmpty == true) {
-                        return const Center(
-                          child: Text(
-                            'No categories found. Add your first category!',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }
-
-                      List<CategoryModel> categories = [];
-                      for (var doc in snapshot.data!.docs) {
-                        final data = doc.data() as Map<String, dynamic>;
-                        final category = CategoryModel.fromJson(data);
-                        categories.add(category);
-                      }
-                      provider.categories = categories;
-                      return CatecoryList(
-                        categories: categories,
-                      );
-                    },
+                  child: CatecoryList(
+                    categoriess: provider.filteredCategories,
                   ),
-                ),
+                )
             ],
           ),
         ),
-        if (provider.isLoading)
-          const Positioned.fill(
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
       ],
     );
   }
