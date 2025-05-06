@@ -1,10 +1,7 @@
-import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/enums/product_status.dart';
-import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/screens/products/all_products.dart';
 import 'package:admin_dashboard/screens/products/product_provider.dart';
 import 'package:admin_dashboard/widgets/add_item.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +11,9 @@ class ProductsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProductProvider()..getCategories(),
+      create: (_) => ProductProvider()
+        ..getCategories()
+        ..fetchProducts(),
       child: const ProdcutsDashboard(),
     );
   }
@@ -103,7 +102,13 @@ class ProdcutsDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              if (provider.filteredProducts.isNotEmpty)
+              if (provider.isLoading)
+                const Positioned.fill(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else if (provider.filteredProducts.isNotEmpty)
                 Expanded(
                   child: ProductsList(
                     prodcuts: provider.filteredProducts,
@@ -116,42 +121,36 @@ class ProdcutsDashboard extends StatelessWidget {
                     prodcuts: [],
                   ),
                 )
-              else
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection(AppCollections.products)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+              // else
+              //   Expanded(
+              //     child: StreamBuilder<QuerySnapshot>(
+              //       stream: FirebaseFirestore.instance
+              //           .collection(AppCollections.products)
+              //           .snapshots(),
+              //       builder: (context, snapshot) {
+              //         if (snapshot.hasError) {
+              //           return Center(child: Text('Error: ${snapshot.error}'));
+              //         }
+              //         if (snapshot.connectionState == ConnectionState.waiting) {
+              //           return const Center(child: CircularProgressIndicator());
+              //         }
 
-                      List<ProductModel> products = [];
-                      for (var doc in snapshot.data!.docs) {
-                        final data = doc.data() as Map<String, dynamic>;
-                        final product = ProductModel.fromJson(data);
-                        products.add(product);
-                      }
-                      provider.products = products;
-                      return ProductsList(
-                        prodcuts: products,
-                      );
-                    },
-                  ),
-                ),
+              //         List<ProductModel> products = [];
+              //         for (var doc in snapshot.data!.docs) {
+              //           final data = doc.data() as Map<String, dynamic>;
+              //           final product = ProductModel.fromJson(data);
+              //           products.add(product);
+              //         }
+              //         provider.products = products;
+              //         return ProductsList(
+              //           prodcuts: products,
+              //         );
+              //       },
+              //     ),
+              //   ),
             ],
           ),
         ),
-        if (provider.isLoading)
-          const Positioned.fill(
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
       ],
     );
   }

@@ -56,12 +56,13 @@ class _CategoryFormState extends State<CategoryForm> {
           const SizedBox(height: 16),
           if (provider.bytes != null || widget.categoryModel?.imageUrl != null)
             Image(
-              height: 100,
-              image: MemoryImage(
-                provider.bytes ??
-                    base64Decode(widget.categoryModel?.imageUrl ?? ''),
-              ),
-            )
+                height: 100,
+                image: MemoryImage(
+                  provider.bytes ??
+                      base64Decode(widget.categoryModel?.imageUrl ?? ''),
+                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    const Text('No image selected'))
           else
             const Text('No image selected'),
           const SizedBox(height: 16),

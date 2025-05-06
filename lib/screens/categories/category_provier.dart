@@ -43,10 +43,32 @@ class CategoryProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void fetchCategories() async {
+    try {
+      FirebaseFirestore.instance
+          .collection(AppCollections.categories)
+          .snapshots()
+          .listen((event) {
+        setState(true);
+        categories = event.docs
+            .map(
+              (doc) => CategoryModel.fromJson(doc.data()),
+            )
+            .toList();
+        filteredCategories = categories;
+        setState(false);
+      });
+    } catch (e) {
+      setState(false);
+      if (kDebugMode) {
+        print('Error fetching categories: $e');
+      }
+    }
+  }
+
   Future<void> addCategory(BuildContext context) async {
     if (formKey.currentState!.validate()) {
       try {
-        setState(true);
         String? imageUrl;
         if (image != null) {
           imageUrl = base64Encode(bytes!);
@@ -67,7 +89,6 @@ class CategoryProvider with ChangeNotifier {
           data: categoryModel.toJson(),
           documentId: id,
         );
-        resetForm();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -94,9 +115,7 @@ class CategoryProvider with ChangeNotifier {
     descriptionController.clear();
     image = null;
     bytes = null;
-    filteredCategories = [];
-    bytes = null;
-    setState(false);
+    notifyListeners();
   }
 
   Future<void> editCategory({
@@ -122,7 +141,7 @@ class CategoryProvider with ChangeNotifier {
           documentId: oldCategory.id,
           data: categoryModel.toJson(),
         );
-        resetForm();
+        setState(false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -159,6 +178,7 @@ class CategoryProvider with ChangeNotifier {
               const Spacer(),
               IconButton(
                 onPressed: () {
+                  resetForm();
                   Navigator.pop(context);
                 },
                 icon: const Icon(Icons.close),
@@ -169,13 +189,14 @@ class CategoryProvider with ChangeNotifier {
             width: 400,
             child: CategoryForm(
               categoryModel: categoryModel,
-              onSubmitted: () {
+              onSubmitted: () async {
                 isAdding
-                    ? addCategory(context)
-                    : editCategory(
+                    ? await addCategory(context)
+                    : await editCategory(
                         context: context,
                         oldCategory: categoryModel!,
                       );
+                resetForm();
               },
             ),
           ),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/screens/products/product_provider.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,18 @@ class ProductsList extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  prodcuts[index].description,
+                  provider.categories
+                      .firstWhere(
+                        (category) => category.id == prodcuts[index].categoryID,
+                        orElse: () => CategoryModel(
+                          '-1',
+                          'this category has been deleted',
+                          '',
+                          '',
+                          DateTime.now(),
+                        ),
+                      )
+                      .name,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
