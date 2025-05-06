@@ -15,13 +15,13 @@ import 'package:provider/provider.dart';
 
 class ProductProvider with ChangeNotifier {
   final FirebaseFirestoreService firebaseService = FirebaseFirestoreService();
-  bool isLoading = false;
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   final priceController = TextEditingController();
   final quantityController = TextEditingController();
   final imagePicker = ImagePickerService();
+  bool isLoading = false;
   String? selectedCategoryId;
   List<CategoryModel> categories = [];
   XFile? image;
@@ -37,6 +37,9 @@ class ProductProvider with ChangeNotifier {
     if (query.isNotEmpty) {
       filteredProducts = products
           .where((element) =>
+              categories.any((category) =>
+                  category.id == element.categoryID &&
+                  category.name.toLowerCase().contains(query.toLowerCase())) ||
               element.status.name.toLowerCase().contains(query.toLowerCase()) ||
               element.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
@@ -44,6 +47,21 @@ class ProductProvider with ChangeNotifier {
       filteredProducts = products; // Reset to original list if query is empty
     }
     notifyListeners();
+  }
+
+  void fetchProducts() async {
+    FirebaseFirestore.instance
+        .collection(AppCollections.products)
+        .snapshots()
+        .listen((event) {
+      setState(true);
+      products = event.docs.map((doc) {
+        return ProductModel.fromJson(doc.data());
+      }).toList();
+      filteredProducts = products;
+      setState(false);
+      notifyListeners();
+    });
   }
 
   Future<void> getCategories() async {
@@ -101,7 +119,7 @@ class ProductProvider with ChangeNotifier {
           data: product.toJson(),
           documentId: id,
         );
-        resetForm();
+        setState(false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -129,7 +147,6 @@ class ProductProvider with ChangeNotifier {
     priceController.clear();
     quantityController.clear();
     selectedCategoryId = null;
-    filteredProducts = [];
     image = null;
     bytes = null;
     setState(false);
@@ -155,14 +172,14 @@ class ProductProvider with ChangeNotifier {
           quantity: int.tryParse(quantityController.text) ?? 0,
           status: oldProduct.status,
           createdAt: DateTime.now(),
-          categoryID: oldProduct.categoryID,
+          categoryID: selectedCategoryId ?? oldProduct.categoryID,
         );
         await firebaseService.updateDocument(
           collectionId: AppCollections.products,
           documentId: oldProduct.id,
           data: categoryModel.toJson(),
         );
-        resetForm();
+        setState(false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -199,6 +216,7 @@ class ProductProvider with ChangeNotifier {
               const Spacer(),
               IconButton(
                 onPressed: () {
+                  resetForm();
                   Navigator.pop(context);
                 },
                 icon: const Icon(Icons.close),
@@ -209,13 +227,14 @@ class ProductProvider with ChangeNotifier {
             width: 400,
             child: ProductForm(
               productModel: productModel,
-              onSubmitted: () {
+              onSubmitted: () async {
                 isAdding
-                    ? addProduct(context)
-                    : editProduct(
+                    ? await addProduct(context)
+                    : await editProduct(
                         context: context,
                         oldProduct: productModel!,
                       );
+                resetForm();
               },
             ),
           ),

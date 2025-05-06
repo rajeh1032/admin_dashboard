@@ -1,10 +1,8 @@
-import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/enums/order_filter.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
 import 'package:admin_dashboard/screens/orders/order_provider.dart';
 import 'package:admin_dashboard/screens/orders/orders_list.dart';
 import 'package:admin_dashboard/widgets/add_item.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +14,8 @@ class OrdersScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => OrderProvider()
         ..fetchCategories()
-        ..fetchProducts(),
+        ..fetchProducts()
+        ..fetchOrders(),
       child: const OrdersDashboard(),
     );
   }
@@ -181,33 +180,33 @@ class _OrdersDashbordState extends State<OrdersDashboard> {
                 orders: const [],
               ),
             )
-          else
-            Expanded(
-              child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection(AppCollections.orders)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return const Center(
-                      child: Text('Error loading orders'),
-                    );
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  final orders = snapshot.data!.docs
-                      .map((doc) => OrderModel.fromJson(doc.data()))
-                      .toList();
-                  provider.orders = orders;
-                  return OrdersList(
-                    orders: orders,
-                  );
-                },
-              ),
-            ),
+//           else
+//             Expanded(
+//               child: StreamBuilder(
+//                 stream: FirebaseFirestore.instance
+//                     .collection(AppCollections.orders)
+//                     .snapshots(),
+//                 builder: (context, snapshot) {
+//                   if (snapshot.hasError) {
+//                     return const Center(
+//                       child: Text('Error loading orders'),
+//                     );
+//                   }
+//                   if (snapshot.connectionState == ConnectionState.waiting) {
+//                     return const Center(
+//                       child: CircularProgressIndicator(),
+//                     );
+//                   }
+//                   final orders = snapshot.data!.docs
+//                       .map((doc) => OrderModel.fromJson(doc.data()))
+//                       .toList();
+//                   provider.orders = orders;
+//                   return OrdersList(
+//                     orders: orders,
+//                   );
+//                 },
+//               ),
+//             ),
         ],
       ),
     );

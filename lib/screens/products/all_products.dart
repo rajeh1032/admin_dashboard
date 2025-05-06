@@ -58,7 +58,11 @@ class ProductsList extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  prodcuts[index].description,
+                  provider.categories
+                      .firstWhere(
+                        (category) => category.id == prodcuts[index].categoryID,
+                      )
+                      .name,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,

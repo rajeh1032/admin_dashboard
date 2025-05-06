@@ -67,9 +67,8 @@ class _ProductFormState extends State<ProductForm> {
                     );
                   }).toList(),
                   onSelected: (value) {
-                    setState(() {
-                      provider.selectedCategoryId = value;
-                    });
+                    provider.selectedCategoryId = value;
+                    provider.setState(false);
                   },
                 ),
               ),

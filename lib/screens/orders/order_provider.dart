@@ -60,6 +60,22 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchOrders() async {
+    try {
+      FirebaseFirestore.instance
+          .collection(AppCollections.orders)
+          .snapshots()
+          .listen((event) {
+        orders =
+            event.docs.map((doc) => OrderModel.fromJson(doc.data())).toList();
+        filteredOrders = orders;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('Error fetching orders: $e');
+    }
+  }
+
   Future<void> fetchProducts() async {
     try {
       final snapshot = await _firebaseService.getCollection(
