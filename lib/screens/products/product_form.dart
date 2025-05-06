@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/screens/products/product_provider.dart';
 import 'package:admin_dashboard/widgets/custom_text_field.dart';
@@ -48,8 +49,17 @@ class _ProductFormState extends State<ProductForm> {
                         provider.selectedCategoryId == null
                             ? 'Select Category'
                             : provider.categories
-                                .firstWhere((element) =>
-                                    element.id == provider.selectedCategoryId)
+                                .firstWhere(
+                                  (element) =>
+                                      element.id == provider.selectedCategoryId,
+                                  orElse: () => CategoryModel(
+                                    '-1',
+                                    '',
+                                    '',
+                                    '',
+                                    DateTime.now(),
+                                  ),
+                                )
                                 .name,
                         style: const TextStyle(
                           fontSize: 16,
@@ -106,12 +116,13 @@ class _ProductFormState extends State<ProductForm> {
           const SizedBox(height: 16),
           if (context.watch<ProductProvider>().bytes != null ||
               widget.productModel?.imageUrl != null)
-            Image(
+            Image.memory(
               height: 100,
-              image: MemoryImage(
-                context.watch<ProductProvider>().bytes ??
-                    base64Decode(widget.productModel?.imageUrl ?? ''),
-              ),
+              errorBuilder: (context, error, stackTrace) {
+                return const Text('No image selected');
+              },
+              context.watch<ProductProvider>().bytes ??
+                  base64Decode(widget.productModel?.imageUrl ?? ''),
             )
           else
             const Text('No image selected'),
