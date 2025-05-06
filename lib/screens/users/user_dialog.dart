@@ -17,6 +17,7 @@ class UserDialog extends StatelessWidget {
       content: Form(
         key: provider.formkey,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             CustomTextField(
               controller: provider.nameController,
