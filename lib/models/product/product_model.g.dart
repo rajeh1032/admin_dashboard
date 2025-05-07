@@ -34,4 +34,5 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
 const _$ProductStatusEnumMap = {
   ProductStatus.outOfStock: 'outOfStock',
   ProductStatus.inStock: 'inStock',
+  ProductStatus.fromUser: 'fromUser',
 };

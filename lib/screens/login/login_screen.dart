@@ -1,7 +1,7 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
 import 'package:admin_dashboard/enums/user_role.dart';
-import 'package:admin_dashboard/model/user/user_model.dart';
+import 'package:admin_dashboard/models/user/user_model.dart';
 import 'package:admin_dashboard/screens/home_screen.dart';
 import 'package:admin_dashboard/widgets/custom_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';

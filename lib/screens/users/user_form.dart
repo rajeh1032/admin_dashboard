@@ -11,7 +11,7 @@ class UserDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<UsersProvider>(context);
+    final provider = context.watch<UsersProvider>();
     return AlertDialog(
       title: Row(
         children: [
@@ -39,7 +39,7 @@ class UserDialog extends StatelessWidget {
             const SizedBox(height: 8),
             CustomTextField(
               controller: provider.emailController,
-              labelText: 'email',
+              labelText: 'Email',
               hintText: 'Enter user email',
             ),
             const SizedBox(height: 8),
@@ -74,7 +74,10 @@ class UserDialog extends StatelessWidget {
                     ),
                   )
                   .toList(),
-              onSelected: (value) => provider.userRole = value,
+              onSelected: (value) {
+                provider.userRole = value;
+                provider.notifyListeners();
+              },
             ),
             const SizedBox(height: 8),
             PopupMenuButton<UserStatus>(
