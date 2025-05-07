@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:admin_dashboard/enums/product_status.dart';
 import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/screens/products/product_provider.dart';
@@ -109,6 +110,41 @@ class _ProductFormState extends State<ProductForm> {
             controller: provider.quantityController,
             hintText: 'Enter Quantity',
             labelText: 'Quantity',
+          ),
+          const SizedBox(height: 16),
+          PopupMenuButton<ProductStatus>(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(children: [
+                Text(
+                  provider.selectedStatus == null
+                      ? 'Select Status'
+                      : provider.selectedStatus!.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.arrow_drop_down),
+              ]),
+            ),
+            onSelected: (value) {
+              provider.selectedStatus = value;
+              provider.setState(false);
+            },
+            itemBuilder: (context) => [
+              ...ProductStatus.values.map((element) {
+                return PopupMenuItem(
+                  value: element,
+                  child: Text(element.name),
+                );
+              })
+            ],
           ),
           const SizedBox(height: 16),
           ElevatedButton(

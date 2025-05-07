@@ -21,6 +21,7 @@ class ProductProvider with ChangeNotifier {
   final priceController = TextEditingController();
   final quantityController = TextEditingController();
   final imagePicker = ImagePickerService();
+  ProductStatus? selectedStatus;
   bool isLoading = false;
   String? selectedCategoryId;
   List<CategoryModel> categories = [];
@@ -92,6 +93,15 @@ class ProductProvider with ChangeNotifier {
       );
       return;
     }
+    if (selectedStatus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a Product Status'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     if (formKey.currentState!.validate()) {
       try {
         setState(true);
@@ -110,7 +120,7 @@ class ProductProvider with ChangeNotifier {
           imageUrl: imageUrl ?? '',
           price: double.tryParse(priceController.text) ?? 0.0,
           quantity: int.tryParse(quantityController.text) ?? 0,
-          status: ProductStatus.inStock,
+          status: selectedStatus ?? ProductStatus.inStock,
           createdAt: DateTime.now(),
           categoryID: selectedCategoryId ?? '',
         );
@@ -147,6 +157,7 @@ class ProductProvider with ChangeNotifier {
     priceController.clear();
     quantityController.clear();
     selectedCategoryId = null;
+    selectedStatus = null;
     image = null;
     bytes = null;
     setState(false);
@@ -170,7 +181,7 @@ class ProductProvider with ChangeNotifier {
           imageUrl: imageUrl ?? oldProduct.imageUrl,
           price: double.tryParse(priceController.text) ?? 0.0,
           quantity: int.tryParse(quantityController.text) ?? 0,
-          status: oldProduct.status,
+          status: selectedStatus ?? oldProduct.status,
           createdAt: DateTime.now(),
           categoryID: selectedCategoryId ?? oldProduct.categoryID,
         );
@@ -308,14 +319,16 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void initState(ProductModel? categoryModel) {
-    if (categoryModel != null) {
-      nameController.text = categoryModel.name;
-      descriptionController.text = categoryModel.description;
-      priceController.text = categoryModel.price.toString();
-      selectedCategoryId = categoryModel.categoryID;
-      quantityController.text = categoryModel.quantity.toString();
+  void initState(ProductModel? productModel) {
+    if (productModel != null) {
+      nameController.text = productModel.name;
+      descriptionController.text = productModel.description;
+      priceController.text = productModel.price.toString();
+      selectedCategoryId = productModel.categoryID;
+      quantityController.text = productModel.quantity.toString();
+      selectedStatus = productModel.status;
       bytes = null;
+      notifyListeners();
     }
   }
 
