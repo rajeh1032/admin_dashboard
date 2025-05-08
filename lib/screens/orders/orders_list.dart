@@ -73,7 +73,10 @@ class OrdersList extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          order.customerName,
+                          provider.allProducts
+                              .firstWhere(
+                                  (product) => product.id == order.productId)
+                              .name,
                           style: TextStyle(
                             color: Colors.grey[600],
                           ),

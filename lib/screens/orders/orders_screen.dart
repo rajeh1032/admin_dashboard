@@ -176,33 +176,6 @@ class _OrdersDashbordState extends State<OrdersDashboard> {
                 orders: const [],
               ),
             )
-//           else
-//             Expanded(
-//               child: StreamBuilder(
-//                 stream: FirebaseFirestore.instance
-//                     .collection(AppCollections.orders)
-//                     .snapshots(),
-//                 builder: (context, snapshot) {
-//                   if (snapshot.hasError) {
-//                     return const Center(
-//                       child: Text('Error loading orders'),
-//                     );
-//                   }
-//                   if (snapshot.connectionState == ConnectionState.waiting) {
-//                     return const Center(
-//                       child: CircularProgressIndicator(),
-//                     );
-//                   }
-//                   final orders = snapshot.data!.docs
-//                       .map((doc) => OrderModel.fromJson(doc.data()))
-//                       .toList();
-//                   provider.orders = orders;
-//                   return OrdersList(
-//                     orders: orders,
-//                   );
-//                 },
-//               ),
-//             ),
         ],
       ),
     );
