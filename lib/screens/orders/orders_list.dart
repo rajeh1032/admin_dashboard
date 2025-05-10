@@ -1,5 +1,7 @@
 import 'package:admin_dashboard/enums/order_types.dart';
+import 'package:admin_dashboard/enums/product_status.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
+import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/screens/orders/order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -75,7 +77,18 @@ class OrdersList extends StatelessWidget {
                         Text(
                           provider.allProducts
                               .firstWhere(
-                                  (product) => product.id == order.productId)
+                                (product) => product.id == order.productId,
+                                orElse: () => ProductModel(
+                                    id: '',
+                                    name: '',
+                                    description: '',
+                                    price: 0,
+                                    quantity: 0,
+                                    imageUrl: '',
+                                    categoryID: '',
+                                    createdAt: DateTime.now(),
+                                    status: ProductStatus.fromUser),
+                              )
                               .name,
                           style: TextStyle(
                             color: Colors.grey[600],

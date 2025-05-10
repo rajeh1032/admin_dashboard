@@ -22,9 +22,9 @@ class ProductsList extends StatelessWidget {
     }
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
         childAspectRatio: 1.5,
       ),
       itemCount: prodcuts.length,

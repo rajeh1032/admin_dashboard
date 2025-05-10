@@ -1,6 +1,7 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
 import 'package:admin_dashboard/core/utils/services/firebase_service.dart';
 import 'package:admin_dashboard/enums/order_types.dart';
+import 'package:admin_dashboard/enums/product_status.dart';
 import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
@@ -239,8 +240,22 @@ class OrderProvider extends ChangeNotifier {
     categoryIdController.text = order.categoryId;
     productIdController.text = order.productId;
     customerPhoneController.text = order.phoneNumber;
-    productController.text =
-        allProducts.firstWhere((product) => product.id == order.productId).name;
+    productController.text = allProducts
+        .firstWhere(
+          (product) => product.id == order.productId,
+          orElse: () => ProductModel(
+            id: '',
+            name: '',
+            description: '',
+            price: 0,
+            quantity: 0,
+            imageUrl: '',
+            categoryID: '',
+            createdAt: DateTime.now(),
+            status: ProductStatus.fromUser,
+          ),
+        )
+        .name;
     categoryController.text = categories
         .firstWhere((category) => category.id == order.categoryId)
         .name;

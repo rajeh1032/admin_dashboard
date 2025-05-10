@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Login'),
       ),
       body: Center(
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Image.asset('assets/images/top_logo.png'),
                 const SizedBox(height: 20),
                 CustomTextField(
                   labelText: 'Email',
