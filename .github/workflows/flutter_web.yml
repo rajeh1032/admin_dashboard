@@ -12,14 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
-
+          flutter-version: "3.5.3"
       - run: flutter pub get
       - run: flutter build web --release
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
