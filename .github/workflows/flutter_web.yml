@@ -16,12 +16,17 @@ jobs:
           channel: stable
       - run: flutter --version
       - run: flutter pub get
-      - run: flutter build web --release
-
-      # Create and push to gh-pages branch
+      
+      # Build with base-href parameter for GitHub Pages
+      - run: flutter build web --release --base-href "/admin_dashboard/"
+      
+      # Create a .nojekyll file to prevent GitHub Pages from using Jekyll
+      - run: touch build/web/.nojekyll
+      
+      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
-          force_orphan: true # This will force push to gh-pages branch, overwriting history
+          force_orphan: true
