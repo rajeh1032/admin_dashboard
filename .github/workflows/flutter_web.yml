@@ -1,18 +1,14 @@
 name: Deploy Flutter Web to GitHub Pages
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -21,17 +17,11 @@ jobs:
       - run: flutter --version
       - run: flutter pub get
       - run: flutter build web --release
-      - run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "GitHub Actions Bot"
-          git checkout --orphan gh-pages
-          git reset --hard
-          git commit --allow-empty -m "Initial commit"
-          git push origin gh-pages
-          git fetch origin gh-pages || true
-          git checkout gh-pages || git checkout --orphan gh-pages
+
+      # Create and push to gh-pages branch
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/web
+          publish_dir: ./build/web
+          force_orphan: true # This will force push to gh-pages branch, overwriting history
