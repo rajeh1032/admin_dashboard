@@ -111,7 +111,7 @@ class _ProductFormState extends State<ProductForm> {
             hintText: 'Enter Quantity',
             labelText: 'Quantity',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           PopupMenuButton<ProductStatus>(
             child: Container(
               padding: const EdgeInsets.all(16),
