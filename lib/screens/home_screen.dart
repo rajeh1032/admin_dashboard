@@ -1,15 +1,17 @@
 import 'package:admin_dashboard/core/constants/app_collections.dart';
+import 'package:admin_dashboard/enums/order_types.dart';
+import 'package:admin_dashboard/enums/product_status.dart';
 import 'package:admin_dashboard/models/category/category_model.dart';
 import 'package:admin_dashboard/models/order/order_model.dart';
 import 'package:admin_dashboard/models/product/product_model.dart';
 import 'package:admin_dashboard/models/user/user_model.dart';
 import 'package:admin_dashboard/screens/orders/orders_screen.dart';
 import 'package:admin_dashboard/screens/products/products_screen.dart';
+import 'package:admin_dashboard/widgets/ui_components.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/sidebar.dart';
-import '../widgets/stat_card.dart';
 import 'categories/categories_screen.dart';
 import 'users/users_screen.dart';
 
@@ -40,19 +42,23 @@ class _HomeState extends State<Home> {
       appBar: isDesktop
           ? null
           : AppBar(
-              backgroundColor: const Color(0xFF1E2530),
-              title: const Text('KhordaClick Admin Dashboard'),
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.menu,
+              backgroundColor: AppColors.primary,
+              title: const Text(
+                'KhordaClick Admin',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
                 onPressed: () {
                   setState(() {
                     isDrawerOpen = !isDrawerOpen;
                   });
                 },
               ),
+              elevation: 0,
             ),
       drawer: !isDesktop
           ? Sidebar(
@@ -62,6 +68,8 @@ class _HomeState extends State<Home> {
                 setState(() {
                   selectedIndex = index;
                 });
+                Navigator.pop(
+                    context); // Close drawer after selection on mobile
               },
             )
           : null,
@@ -96,6 +104,8 @@ class _DashboardContentState extends State<_DashboardContent> {
   List<ProductModel> products = [];
   List<CategoryModel> categories = [];
   List<OrderModel> orders = [];
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -103,108 +113,427 @@ class _DashboardContentState extends State<_DashboardContent> {
   }
 
   Future<void> _fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await Future.wait([
+        _fetchUsers(),
+        _fetchProducts(),
+        _fetchCategories(),
+        _fetchOrders(),
+      ]);
+    } catch (e) {
+      // Handle errors
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchUsers() async {
     FirebaseFirestore.instance
         .collection(AppCollections.users)
         .snapshots()
         .listen((data) {
-      users.clear();
-      users = data.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
-      setState(() {});
+      setState(() {
+        users = data.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
+      });
     });
+  }
+
+  Future<void> _fetchProducts() async {
     FirebaseFirestore.instance
         .collection(AppCollections.products)
         .snapshots()
         .listen((data) {
-      products.clear();
-      products =
-          data.docs.map((doc) => ProductModel.fromJson(doc.data())).toList();
-      setState(() {});
+      setState(() {
+        products =
+            data.docs.map((doc) => ProductModel.fromJson(doc.data())).toList();
+      });
     });
+  }
+
+  Future<void> _fetchCategories() async {
     FirebaseFirestore.instance
         .collection(AppCollections.categories)
         .snapshots()
         .listen((data) {
-      categories.clear();
-      categories =
-          data.docs.map((doc) => CategoryModel.fromJson(doc.data())).toList();
-      setState(() {});
+      setState(() {
+        categories =
+            data.docs.map((doc) => CategoryModel.fromJson(doc.data())).toList();
+      });
     });
+  }
+
+  Future<void> _fetchOrders() async {
     FirebaseFirestore.instance
         .collection(AppCollections.orders)
         .snapshots()
         .listen((data) {
-      orders.clear();
-      orders = data.docs.map((doc) => OrderModel.fromJson(doc.data())).toList();
-      setState(() {});
+      setState(() {
+        orders =
+            data.docs.map((doc) => OrderModel.fromJson(doc.data())).toList();
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     return Container(
-      color: Colors.grey[100],
-      padding: const EdgeInsets.all(24.0),
+      alignment: Alignment.topCenter,
+      color: AppColors.background,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dashboard',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Welcome to your KhordaClick administration panel',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                AppButton(
+                  onPressed: _fetchData,
+                  isOutlined: true,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.refresh),
+                      SizedBox(width: 4),
+                      Text('Refresh'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // Main stats cards
+            isSmallScreen
+                ? Column(
+                    children: [
+                      _buildStatCard(
+                        title: 'Total Users',
+                        value: users.length.toString(),
+                        icon: Icons.people,
+                        color: Colors.blue,
+                        description: 'Registered users',
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildStatCard(
+                        title: 'Total Categories',
+                        value: categories.length.toString(),
+                        icon: Icons.category,
+                        color: Colors.orange,
+                        description: 'Product categories',
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildStatCard(
+                        title: 'Total Products',
+                        value: products.length.toString(),
+                        icon: Icons.inventory_2,
+                        color: Colors.green,
+                        description: 'Available products',
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildStatCard(
+                        title: 'Total Orders',
+                        value: orders.length.toString(),
+                        icon: Icons.shopping_cart,
+                        color: Colors.purple,
+                        description: 'Processed orders',
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          title: 'Total Users',
+                          value: users.length.toString(),
+                          icon: Icons.people,
+                          color: Colors.blue,
+                          description: 'Registered users',
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildStatCard(
+                          title: 'Total Categories',
+                          value: categories.length.toString(),
+                          icon: Icons.category,
+                          color: Colors.orange,
+                          description: 'Product categories',
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildStatCard(
+                          title: 'Total Products',
+                          value: products.length.toString(),
+                          icon: Icons.inventory_2,
+                          color: Colors.green,
+                          description: 'Available products',
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildStatCard(
+                          title: 'Total Orders',
+                          value: orders.length.toString(),
+                          icon: Icons.shopping_cart,
+                          color: Colors.purple,
+                          description: 'Processed orders',
+                        ),
+                      ),
+                    ],
+                  ),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            // Order summary section
+            Text(
+              'Order Summary',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            isSmallScreen
+                ? Column(
+                    children: [
+                      _buildOrderSummaryCard(
+                        title: 'Pending',
+                        count: orders
+                            .where((o) => o.status == OrderStatus.pending)
+                            .length,
+                        color: Colors.orange,
+                        icon: Icons.hourglass_empty,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildOrderSummaryCard(
+                        title: 'Processing',
+                        count: orders
+                            .where((o) => o.status == OrderStatus.processing)
+                            .length,
+                        color: Colors.blue,
+                        icon: Icons.pending_actions,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildOrderSummaryCard(
+                        title: 'Completed',
+                        count: orders
+                            .where((o) => o.status == OrderStatus.completed)
+                            .length,
+                        color: Colors.green,
+                        icon: Icons.check_circle,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildOrderSummaryCard(
+                        title: 'Cancelled',
+                        count: orders
+                            .where((o) => o.status == OrderStatus.cancelled)
+                            .length,
+                        color: Colors.red,
+                        icon: Icons.cancel,
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: _buildOrderSummaryCard(
+                          title: 'Pending',
+                          count: orders
+                              .where((o) => o.status == OrderStatus.pending)
+                              .length,
+                          color: Colors.orange,
+                          icon: Icons.hourglass_empty,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildOrderSummaryCard(
+                          title: 'Processing',
+                          count: orders
+                              .where((o) => o.status == OrderStatus.processing)
+                              .length,
+                          color: Colors.blue,
+                          icon: Icons.pending_actions,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildOrderSummaryCard(
+                          title: 'Completed',
+                          count: orders
+                              .where((o) => o.status == OrderStatus.completed)
+                              .length,
+                          color: Colors.green,
+                          icon: Icons.check_circle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildOrderSummaryCard(
+                          title: 'Cancelled',
+                          count: orders
+                              .where((o) => o.status == OrderStatus.cancelled)
+                              .length,
+                          color: Colors.red,
+                          icon: Icons.cancel,
+                        ),
+                      ),
+                    ],
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required String description,
+  }) {
+    return AppCard(
+      boxShadow: AppShadows.small,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Dashboard Overview',
-            style: TextStyle(
-              fontSize: 24,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.round),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                int crossAxisCount;
-                double childAspectRatio;
-                if (constraints.maxWidth > 1200) {
-                  crossAxisCount = 4;
-                  childAspectRatio = 2;
-                } else if (constraints.maxWidth > 800) {
-                  crossAxisCount = 2;
-                  childAspectRatio = 2;
-                } else {
-                  crossAxisCount = 1;
-                  childAspectRatio = 2.5;
-                }
-                return GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  shrinkWrap: true,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: childAspectRatio,
-                  children: [
-                    StatCard(
-                      title: 'Users',
-                      value: users.length.toString(),
-                      icon: Icons.people,
-                      color: Colors.orange,
-                    ),
-                    StatCard(
-                      title: 'Categories',
-                      value: categories.length.toString(),
-                      icon: Icons.category,
-                      color: Colors.green,
-                    ),
-                    StatCard(
-                      title: 'Products',
-                      value: products.length.toString(),
-                      icon: Icons.inventory,
-                      color: Colors.blue,
-                    ),
-                    StatCard(
-                      title: 'Orders',
-                      value: orders.length.toString(),
-                      icon: Icons.shopping_cart,
-                      color: Colors.purple,
-                    ),
-                  ],
-                );
-              },
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderSummaryCard({
+    required String title,
+    required int count,
+    required Color color,
+    required IconData icon,
+  }) {
+    return AppCard(
+      boxShadow: AppShadows.small,
+      backgroundColor: color.withOpacity(0.05),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppRadius.round),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+              Text(
+                '$count orders',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Icon(
+            Icons.arrow_forward,
+            color: color,
+            size: 18,
           ),
         ],
       ),
