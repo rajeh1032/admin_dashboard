@@ -28,6 +28,8 @@ jobs:
           git reset --hard
           git commit --allow-empty -m "Initial commit"
           git push origin gh-pages
+          git fetch origin gh-pages || true
+          git checkout gh-pages || git checkout --orphan gh-pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
