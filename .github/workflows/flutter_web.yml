@@ -21,7 +21,6 @@ jobs:
       - run: flutter --version
       - run: flutter pub get
       - run: flutter build web --release
-      - run: git remote add origin https://github.com/${{ github.repository }}.git
       - run: |
           git checkout --orphan gh-pages
           git reset --hard
