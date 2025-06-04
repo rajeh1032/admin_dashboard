@@ -325,7 +325,7 @@ class _DashboardContentState extends State<_DashboardContent> {
             const SizedBox(height: AppSpacing.xl),
 
             // Order summary section
-            Text(
+            const Text(
               'Order Summary',
               style: TextStyle(
                 fontSize: 20,
@@ -444,7 +444,7 @@ class _DashboardContentState extends State<_DashboardContent> {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
@@ -475,7 +475,7 @@ class _DashboardContentState extends State<_DashboardContent> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             description,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
@@ -522,7 +522,7 @@ class _DashboardContentState extends State<_DashboardContent> {
               ),
               Text(
                 '$count orders',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),

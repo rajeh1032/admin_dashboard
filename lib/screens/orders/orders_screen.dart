@@ -239,7 +239,7 @@ class _OrdersDashboardState extends State<OrdersDashboard> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -368,7 +368,7 @@ class _OrdersDashboardState extends State<OrdersDashboard> {
     }
 
     if (provider.filteredOrders.isEmpty && provider.orders.isNotEmpty) {
-      return AppEmptyState(
+      return const AppEmptyState(
         icon: Icons.search_off,
         title: 'No Matching Orders',
         message: 'Try adjusting your search or filters',
@@ -568,7 +568,7 @@ class ImprovedOrdersList extends StatelessWidget {
       child: Theme(
         // Override default data table theme to ensure better visibility
         data: Theme.of(parentContext).copyWith(
-          dataTableTheme: DataTableThemeData(
+          dataTableTheme: const DataTableThemeData(
             headingTextStyle: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -583,10 +583,10 @@ class ImprovedOrdersList extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(AppColors.background),
+              headingRowColor: WidgetStateProperty.all(AppColors.background),
               columnSpacing: 16,
               horizontalMargin: 8,
-              border: TableBorder(
+              border: const TableBorder(
                 horizontalInside:
                     BorderSide(color: AppColors.divider, width: 1),
               ),

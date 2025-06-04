@@ -141,7 +141,7 @@ class AppBadge extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: fontSize + 2, color: color),
-            SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xs),
           ],
           Text(
             text,
@@ -457,7 +457,7 @@ class AppDataTable<T> extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: SingleChildScrollView(
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(AppColors.background),
+              headingRowColor: WidgetStateProperty.all(AppColors.background),
               dataRowMinHeight: 60,
               dataRowMaxHeight: 60,
               columns: columns,
@@ -476,11 +476,11 @@ class Responsive extends StatelessWidget {
   final Widget desktop;
 
   const Responsive({
-    Key? key,
+    super.key,
     required this.mobile,
     this.tablet,
     required this.desktop,
-  }) : super(key: key);
+  });
 
   static bool isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 650;
